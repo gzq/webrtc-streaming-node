@@ -33,8 +33,6 @@
 #include "BackTrace.h"
 #include "MediaStream.h"
 #include "MediaStreamTrack.h"
-#include "AudioSink.h"
-#include "VideoSink.h"
 #include "GetUserMedia.h"
 
 using namespace v8;
