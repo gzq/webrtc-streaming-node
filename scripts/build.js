@@ -110,6 +110,8 @@ console.log("build",WEBRTC_SRC);
 //var res = spawn('python', [ WEBRTC_SRC + path.sep + 'webrtc' + path.sep + 'build' + path.sep + 'gyp_webrtc', 'src' + path.sep + 'webrtc.gyp'
 // gn gen out/Release
 // gn gen out/Release --args="use_ozone=true rtc_include_pulse_audio=false "
+process.env.CHROMIUM_BUILDTOOLS_PATH = '/home/comcastuser/san/new/webrtc-native/third_party/webrtc/src/buildtools';
+
     var res = spawn("gn", ['gen', 'out/Release',' --args=use_ozone=true rtc_include_pulse_audio=false '], {
      cwd: WEBRTC_SRC,
      env: process.env,
@@ -190,7 +192,6 @@ function configure() {
         process.env['CPATH'] += CPATH ? ':' + CPATH : '';
       } else {
          if (NODE_ZERO) {
-console.log("NODE_ZERO");
           process.env['GYP_DEFINES'] += ' clang=0';
           process.env['CXX'] = 'g++-4.8';
           
@@ -201,7 +202,6 @@ console.log("NODE_ZERO");
           process.env['CPATH'] += '/usr/include/c++/4.8/backward/';
           process.env['CPATH'] += CPATH ? ':' + CPATH : '';
         } else {
-console.log("!!!!NODE_ZERO");
           process.env['GYP_DEFINES'] += ' clang=1';
         }
 
@@ -212,15 +212,6 @@ console.log("!!!!NODE_ZERO");
             process.env['JAVA_HOME'] = '/usr/lib/jvm/default-java';
           }
         } 
-         /*     process.env['GYP_DEFINES'] += ' clang=0';
-
-      if (!process.env['JAVA_HOME']) {
-        if (fs.existsSync('/usr/lib/jvm/java')) {
-          process.env['JAVA_HOME'] = '/usr/lib/jvm/java';
-        } else {
-          process.env['JAVA_HOME'] = '/usr/lib/jvm/default-java';
-        }
-      }*/
       }
 
       break;

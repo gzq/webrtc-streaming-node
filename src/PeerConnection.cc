@@ -156,25 +156,6 @@ PeerConnection::PeerConnection(const Configuration config) : _config(config) {
         Platform::GetWorker(), Platform::GetWorker(), Platform::GetSignal(),
         nullptr, nullptr, nullptr);
 
-//LOG(LS_INFO) <<  "PEERCONNECTION FACTORY CREATED";
-
-//_factory  = webrtc::CreatePeerConnectionFactory();
-// AddStream();
-/*  webrtc::PeerConnectionInterface::RTCConfiguration  Config;
-  webrtc::PeerConnectionInterface::IceServer server;
-  server.uri = "stun:stun.l.google.com:19302";
-  Config.servers.push_back(server);
-
-  webrtc::FakeConstraints constraints;
-constraints.AddOptional(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
-                            "false");
-*/
-
-  //_socket = _factory->CreatePeerConnection(
-    //  config, nullptr, nullptr, _peer.get());
-
-//_socket = _factory->CreatePeerConnection(
- //     config, NULL, NULL, _peer.get());
 
   if (!_factory.get()) {
     LOG(LS_INFO) <<  "PEERCONNECTION _factory null";
@@ -214,62 +195,13 @@ webrtc::PeerConnectionInterface *PeerConnection::GetSocket() {
   if (!_socket.get()) {
     if (_factory.get()) {
  
-  //Configuration config;
   
-   //config.ice_server.uri = "stun:stun.l.google.com:19302";
-LOG(LS_INFO) <<  "BEFORE PEERCONNECTION CREATED ";
-  //config.servers.push_back(config.ice_server);
-  //config.servers.push_back(config.ice_server);
-/*  config.servers[1].uri = kTurnIceServer;
-  config.servers[1].password = kTurnPassword;
-//  config.servers.push_back(config.ice_server);
-  config.servers[2].uri = kTurnIceServerWithTransport;
-  config.servers[2].password = kTurnPassword;
-  //config.servers.push_back(config.ice_server);*/
-  //std::unique_ptr<FakeRTCCertificateGenerator> cert_generator(
- //     new FakeRTCCertificateGenerator());
-//LOG(LS_INFO) <<  "BEFORE PEERCONNECTION CREATED "<<_config.ice_candidate_pool_size ;
-//_config.ice_candidate_pool_size = 3;
-//LOG(LS_INFO) <<  "BEFORE PEERCONNECTION CREATED "<<_config.ice_candidate_pool_size ;
-  /*rtc::scoped_refptr<webrtc::PeerConnectionInterface> _socket(_factory->CreatePeerConnection(
-      _config, nullptr, nullptr, nullptr,
-      _peer.get()));
-
-*/
-    //  EventEmitter::SetReference(true);
- //string servers1 = "stun:stun.l.google.com:19302";
-//LOG(LS_INFO)  << "sever is :: "<< _config.servers[0].uri;
-
- /* webrtc::PeerConnectionInterface::RTCConfiguration  config;
- // webrtc::PeerConnectionInterface::RTCConfiguration  config;
-  webrtc::PeerConnectionInterface::IceServer server;
-//  server.urls.push_back(std::string("stun:stun.l.google.com:19302"));
-  server.uri = std::string("stun:stun.l.google.com:19302");
-  //config.media_config.video.suspend_below_min_bitrate = false;                    
-  config.servers.push_back(server);
-  config.disable_ipv6_on_wifi = false;
- // _socket = _factory->CreatePeerConnection(_config, 0, 0, _peer.get());
-//_factory->SetConfiguration(Config);
-  webrtc::FakeConstraints constraints;
-constraints.SetAllowDtlsSctpDataChannels();
-constraints.AddOptional(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
-                            "false");
-  std::unique_ptr<FakeRTCCertificateGenerator> cert_generator(
-      new FakeRTCCertificateGenerator());
-  rtc::scoped_refptr<webrtc::PeerConnectionInterface> _socket(_factory->CreatePeerConnection(
-      config, nullptr, nullptr, std::move(cert_generator), _peer.get()));
-*/
 _config.rtcp_mux_policy = webrtc::PeerConnectionInterface::RtcpMuxPolicy::kRtcpMuxPolicyNegotiate;
-webrtc::FakeConstraints constraints;
-constraints.AddOptional(webrtc::MediaConstraintsInterface::kEnableDtlsSrtp,
-                            "true");
-		constraints.AddMandatory(webrtc::MediaConstraintsInterface::kOfferToReceiveVideo, "false");
-		constraints.AddMandatory(webrtc::MediaConstraintsInterface::kOfferToReceiveAudio, "false");
-LOG(LS_INFO)  << "sever is :: "<< _config.servers[0].uri;
+
  _socket = _factory->CreatePeerConnection(_config,  nullptr, nullptr, _peer.get());
  //AddStream(_socket.get());
-// _socket = _factory->CreatePeerConnection(config, &constraints,nullptr, nullptr, _peer.get());
-LOG(LS_INFO) <<  "AFTER PEERCONNECTION CREATED";
+
+
       if (!_socket.get()) {
         Nan::ThrowError("Internal Socket Error");
       }
@@ -285,28 +217,6 @@ void PeerConnection::New(const Nan::FunctionCallbackInfo<Value> &info) {
   LOG(LS_INFO) << __PRETTY_FUNCTION__;
 
 
-
-
-
-// v8::Local<v8::Object> param1 = info[0]->ToObject();
-//v8::Local<v8::Value> name_ = param1->Get(New<v8::String>("name").ToLocalChecked());
-    if (!info[0].IsEmpty() && info[0]->IsObject()) {
-    Local<Object> desc = Local<Object>::Cast(info[0]);
- Local<Value> servers = desc->Get(Nan::New("servers").ToLocalChecked());
-
-
-v8::String::Utf8Value param1(servers->ToString());
-
-    // convert it to string
-    std::string foo = std::string(*param1);    
-
-LOG(LS_INFO) << "val is" << foo;
-}     
-    // convert it to string
-    
-
-
-
   if (info.IsConstructCall()) {
 Configuration config;
  Local<Object> _config = Local<Object>::Cast(info[0]);
@@ -316,21 +226,33 @@ Local<Value> iceservers_value = _config->Get(Nan::New("iceServers").ToLocalCheck
 
       for (unsigned int index = 0; index < list->Length(); index++) {
         Local<Value> server_value = list->Get(index);
-Local<Object> server = Local<Object>::Cast(server_value);
+
+        if (!server_value.IsEmpty() && server_value->IsObject()) {
+          Local<Object> server = Local<Object>::Cast(server_value);
           Local<Value> url_value = server->Get(Nan::New("url").ToLocalChecked());
-          
+          Local<Value> username_value = server->Get(Nan::New("username").ToLocalChecked());
+          Local<Value> credential_value = server->Get(Nan::New("credential").ToLocalChecked());
+
           if (!url_value.IsEmpty() && url_value->IsString()) {
             v8::String::Utf8Value url(url_value->ToString());
             webrtc::PeerConnectionInterface::IceServer entry;
 
             entry.uri = *url;
 
-            LOG(LS_INFO) << "val is"<<entry.uri;
+            if (!username_value.IsEmpty() && username_value->IsString()) {
+              String::Utf8Value username(username_value->ToString());
+              entry.username = *username;
+            }
+
+            if (!credential_value.IsEmpty() && credential_value->IsString()) {
+              String::Utf8Value credential(credential_value->ToString());
+              entry.password = *credential;
+            }
 
             config.servers.push_back(entry);
-LOG(LS_INFO) << "val is"<<config.servers[0].uri;
-
-}}
+          }
+        }        
+      }
 }
     PeerConnection* peer = new PeerConnection(config);
     peer->Wrap(info.This(), "PeerConnection");
