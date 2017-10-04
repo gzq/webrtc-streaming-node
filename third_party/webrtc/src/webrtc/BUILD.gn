@@ -280,6 +280,7 @@ if (!build_with_chromium) {
       "system_wrappers:system_wrappers_default",
       "video",
       "voice_engine",
+      "//../third_party/jsoncpp",
     ]
 
     if (rtc_enable_protobuf) {

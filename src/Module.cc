@@ -26,15 +26,16 @@
 #include "Common.h"
 
 #include "Global.h"
-#include "Core.h"
+#include "Platform.h"
 #include "Stats.h"
 #include "PeerConnection.h"
 #include "DataChannel.h"
 #include "BackTrace.h"
-#include "GetSources.h"
-#include "GetUserMedia.h"
 #include "MediaStream.h"
 #include "MediaStreamTrack.h"
+#include "AudioSink.h"
+#include "VideoSink.h"
+#include "GetUserMedia.h"
 
 using namespace v8;
 
@@ -95,7 +96,7 @@ void RTCSessionDescription(const Nan::FunctionCallbackInfo<Value> &info) {
 void WebrtcModuleDispose(void *arg) {
   LOG(LS_INFO) << __PRETTY_FUNCTION__;
   
-  WebRTC::Core::Dispose(); 
+  WebRTC::Platform::Dispose();
 }
 
 void WebrtcModuleInit(Handle<Object> exports) {
@@ -104,15 +105,16 @@ void WebrtcModuleInit(Handle<Object> exports) {
   Nan::HandleScope scope;
 
   WebRTC::Global::Init(exports);
-  WebRTC::Core::Init();
+  WebRTC::Platform::Init();
   WebRTC::RTCStatsResponse::Init();
   WebRTC::RTCStatsReport::Init();
   WebRTC::PeerConnection::Init(exports);
   WebRTC::DataChannel::Init();
-  WebRTC::GetSources::Init(exports);
-  WebRTC::GetUserMedia::Init(exports);
   WebRTC::MediaStream::Init();
   WebRTC::MediaStreamTrack::Init();
+  WebRTC::GetUserMedia::Init(exports);
+ // WebRTC::AudioSink::Init(exports);
+ // WebRTC::VideoSink::Init(exports);
   
   exports->Set(Nan::New("RTCGarbageCollect").ToLocalChecked(), Nan::New<FunctionTemplate>(RTCGarbageCollect)->GetFunction()); 
   exports->Set(Nan::New("RTCIceCandidate").ToLocalChecked(), Nan::New<FunctionTemplate>(RTCIceCandidate)->GetFunction());

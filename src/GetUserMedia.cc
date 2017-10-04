@@ -23,14 +23,15 @@
 *
 */
 
-#include "Core.h"
+#include "Platform.h"
 #include "GetUserMedia.h"
-#include "GetSources.h"
+//#include "GetSources.h"
 #include "MediaStream.h"
 #include "MediaConstraints.h"
 
 using namespace v8;
 using namespace WebRTC;
+
 
 void GetUserMedia::Init(Handle<Object> exports) {
   LOG(LS_INFO) << __PRETTY_FUNCTION__;
@@ -38,11 +39,50 @@ void GetUserMedia::Init(Handle<Object> exports) {
   exports->Set(Nan::New("getUserMedia").ToLocalChecked(), Nan::New<FunctionTemplate>(GetUserMedia::GetMediaStream)->GetFunction());
 }
 
+
+std::unique_ptr<cricket::VideoCapturer> GetUserMedia::OpenVideoCaptureDevice() {
+  std::vector<std::string> device_names;
+  {
+    std::unique_ptr<webrtc::VideoCaptureModule::DeviceInfo> info(
+        webrtc::VideoCaptureFactory::CreateDeviceInfo());
+    if (!info) {
+      return nullptr;
+    }
+    int num_devices = info->NumberOfDevices();
+    for (int i = 0; i < num_devices; ++i) {
+      const uint32_t kSize = 256;
+      char name[kSize] = {0};
+      char id[kSize] = {0};
+      if (info->GetDeviceName(i, name, kSize, id, kSize) != -1) {
+        device_names.push_back(name);
+      }
+    }
+  }
+
+  cricket::WebRtcVideoDeviceCapturerFactory factory;
+  std::unique_ptr<cricket::VideoCapturer> capturer;
+  for (const auto& name : device_names) {
+    capturer = factory.Create(cricket::Device(name, 0));
+    if (capturer) {
+      break;
+    }
+  }
+  return capturer;
+}
+
 void GetUserMedia::GetMediaStream(const Nan::FunctionCallbackInfo<Value> &info) {
   LOG(LS_INFO) << __PRETTY_FUNCTION__;
   
-  rtc::scoped_refptr<webrtc::MediaStreamInterface> stream;
   rtc::scoped_refptr<MediaConstraints> constraints = MediaConstraints::New(info[0]);
+rtc::scoped_refptr<webrtc::MediaStreamInterface> stream;
+//rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
+//rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory  = webrtc::CreatePeerConnectionFactory(
+        Platform::GetWorker(), Platform::GetWorker(), Platform::GetSignal(),
+        nullptr, nullptr, nullptr);
+
+
+
   const char *error = 0;
   bool have_source = false;
 
@@ -50,23 +90,46 @@ void GetUserMedia::GetMediaStream(const Nan::FunctionCallbackInfo<Value> &info) 
   std::string videoId = constraints->VideoId();
 
   if (constraints->UseAudio() || constraints->UseVideo()) {
-    //webrtc::PeerConnectionFactoryInterface *factory = Core::GetFactory();
-    rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory = Core::CreateFactory();
+   
+    if (_factory.get()) {
 
-    if (factory.get()) {
-      stream = factory->CreateLocalMediaStream("stream");
+
+
+
+ 
+LOG(LS_INFO) << "video_track";
+stream =
+      _factory->CreateLocalMediaStream(kStreamLabel);
+
+  //stream->AddTrack(audio_track);
+  //stream->AddTrack(video_track);
+  
+  
+
+
+
+
+
+
 
       if (stream.get()) {
         if (constraints->UseAudio()) {
-          rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
+          
 
-          if (audioId.empty()) {
-            audio_track = GetSources::GetAudioSource(constraints);
-          } else {
-            audio_track = GetSources::GetAudioSource(audioId, constraints);
+LOG(LS_INFO) << "audio_track";
+  //        if (audioId.empty()) {
+
+
+              rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(_factory->CreateAudioTrack(
+          kAudioLabel, _factory->CreateAudioSource(NULL)));
+        /*  } else {
+              rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(_factory->CreateAudioTrack(
+          audioId, _factory->CreateAudioSource(NULL)));
+            
           }
-
+*/
           if (audio_track.get()) {
+
             if (!stream->AddTrack(audio_track)) {
               error = "Invalid Audio Input";
             } else {
@@ -80,14 +143,21 @@ void GetUserMedia::GetMediaStream(const Nan::FunctionCallbackInfo<Value> &info) 
         } 
         
         if (constraints->UseVideo()) {
-          rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
+          
 
-          if (videoId.empty()) {
-            video_track = GetSources::GetVideoSource(constraints);
-          } else {
-            video_track = GetSources::GetVideoSource(videoId, constraints);
+   //       if (videoId.empty()) {
+             rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(_factory->CreateVideoTrack(
+          kVideoLabel,
+          _factory->CreateVideoSource(OpenVideoCaptureDevice(),
+                                                      NULL)));
+     /*     } else {
+  rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(_factory->CreateVideoTrack(
+          videoId,
+          _factory->CreateVideoSource(OpenVideoCaptureDevice(),
+                                                      NULL)));
+           
           }
-
+*/
           if (video_track.get()) {
             if (!stream->AddTrack(video_track)) {
               error = "Invalid Video Input";
@@ -100,6 +170,8 @@ void GetUserMedia::GetMediaStream(const Nan::FunctionCallbackInfo<Value> &info) 
             }
           }
         }
+
+
       } else {
         error = "Internal Error";
       }

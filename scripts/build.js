@@ -3,36 +3,33 @@ var os = require('os');
 var spawn = require('child_process').spawn;
 var path = require('path');
 var request = require('request');
-var ROOT = process.cwd();
 
-if (os.platform() == 'win32') {
-  process.chdir(path.resolve(ROOT, '..'));
-  ROOT = process.cwd();
-}
+var ROOT = path.resolve(__dirname, '..');
 
 if (!fs.existsSync(ROOT + path.sep + 'build' + path.sep + 'config.gypi')) {
   throw new Error('Run node-gyp rebuild instead of node build.js');
 }
 
-var CHROMIUM_BRANCH = 'branch-heads/47';
+var PACKAGE = require(path.resolve(ROOT, 'package.json'));
+
+var CHROMIUM = 'https://chromium.googlesource.com/external/webrtc.git@6294a7eb71c891e9ea41273a7a94113f6802d0da';
 var USE_OPENSSL = false;
 var USE_GTK = false;
-var USE_X11 = false;
-var BUILD_WEBRTC_TESTS = false ;
-var BUILD_WEBRTC_EXAMPLES = false ;
-var SYNC = (process.env['WEBRTC_SYNC'] === 'true') ? true : false;
 
 var PLATFORM = os.platform();
 var SYSTEM = os.release();
-var ARCH = 'arm';
+var ARCH = process.argv[2].substring(14);
 var NODEJS = path.resolve(process.argv[3]);
 var NODELIB = process.argv[4].substring(3).split('.')[0];
 var NODEGYP = process.argv[5];
+var URL = 'http://cide.cc:8080/webrtc/';
 var NODEVER = process.version.split('.');
-
+var NODE_ZERO = (NODEVER[0] === 'v0');
+var CROSSCOMPILE = (ARCH !== process.arch);
 NODEVER[2] = 'x';
 NODEVER = NODEVER.join('.');
-  
+
+URL += 'webrtc-' + PACKAGE.version + '-' + PLATFORM + '-' + ARCH + '-' + NODEVER + '.node';
   
 if (fs.existsSync(ROOT + path.sep + 'nodejs.gypi')) {
   fs.unlinkSync(ROOT + path.sep + 'nodejs.gypi');
@@ -68,11 +65,32 @@ if (os.platform() == 'win32' && ARCH == 'x64') {
 function install() {
   fs.linkSync(WEBRTC_OUT + path.sep + 'webrtc.node', path.resolve(ROOT, 'build', CONFIG, 'webrtc.node'));
   
+  if (process.env['CIDE_CREDENTIALS']) {
+    console.log('Uploading module.');
     
+    var credentials = {
+      'auth': {
+        'user': 'cIDE',
+        'pass': process.env['CIDE_CREDENTIALS'],
+      }
     };
     
+    fs.createReadStream(path.resolve(ROOT, 'build', CONFIG, 'webrtc.node')).pipe(request.put(URL, credentials, function(error, response, body) {
+      if (!error && response.statusCode == 200) {
+        console.log('Done! :)');
+      } else {
+        console.log('Upload Failed! :(');
+      }
+    }));
+  } else {
+    setTimeout(function() {
+      console.log('Done! :)');
+    }, 200);
+  } 
+}
 
 function compile() {
+console.log("process.env",  process.env['GYP_DEFINES']);
   var res = spawn('ninja', [ '-C', WEBRTC_OUT ], {
     cwd: WEBRTC_SRC,
     env: process.env,
@@ -81,85 +99,61 @@ function compile() {
 
   res.on('close', function (code) {
     if (!code) {
-      return install();
+//      return install();
     }
 
-    process.exit(1);
+ //   process.exit(1);
   });
 }
+function build() {
+console.log("build",WEBRTC_SRC);
+//var res = spawn('python', [ WEBRTC_SRC + path.sep + 'webrtc' + path.sep + 'build' + path.sep + 'gyp_webrtc', 'src' + path.sep + 'webrtc.gyp'
+// gn gen out/Release
+// gn gen out/Release --args="use_ozone=true rtc_include_pulse_audio=false "
+    var res = spawn("gn", ['gen', 'out/Release',' --args=use_ozone=true rtc_include_pulse_audio=false '], {
+     cwd: WEBRTC_SRC,
+     env: process.env,
+     stdio: 'inherit',
+   });
 
-function build() { 
-  if (fs.existsSync(WEBRTC_SRC)) {
-    var res = spawn('python', [ WEBRTC_SRC + path.sep + 'webrtc' + path.sep + 'build' + path.sep + 'gyp_webrtc', 'src' + path.sep + 'webrtc.gyp' ], {
-      cwd: ROOT,
-      env: process.env,
-      stdio: 'inherit',
-    });
-  
     res.on('close', function (code) {
+
       if (!code) {
         return compile();
       }
-  
+
       process.exit(1);
     });
-  }
-}
-
-function checkout() {
-  var res = spawn('git', [ 'checkout', CHROMIUM_BRANCH ], {
-    cwd: WEBRTC_SRC,
-    env: process.env,
-    stdio: 'inherit',
-  });
-
-  res.on('close', function (code) {
-    if (!code) {
-      return build();
-    }
-
-    process.exit(1);
-  });
 }
 
 function sync() {
-  if (!SYNC) {
-    if (fs.existsSync(THIRD_PARTY + path.sep + 'webrtc_sync')) {
-      var stat = fs.statSync(THIRD_PARTY + path.sep + 'webrtc_sync');
+ if (!fs.existsSync(THIRD_PARTY + path.sep + 'webrtc_sync')) {
+    var res = spawn(GCLIENT, ['sync', '--with_branch_heads'], {
+      cwd: WEBRTC,
+      env: process.env,
+      stdio: 'inherit',
+    });
 
-      if (((new Date().getTime()) - stat.mtime.getTime()) > 86400000) {
-        SYNC = true;
+    res.on('close', function (code) {
+      if (!code) {
+        fs.closeSync(fs.openSync(THIRD_PARTY + path.sep + 'webrtc_sync', 'w'));
+        return build();
       }
-    } else {
-      SYNC = true;
-    }
-  }
 
-  if (!SYNC) {
-    return build();
-  }
-
-  var res = spawn(GCLIENT, ['sync'], {
-    cwd: WEBRTC,
-    env: process.env,
-    stdio: 'inherit',
-  });
-
-  res.on('close', function (code) {
-    if (!code) {
-      fs.closeSync(fs.openSync(THIRD_PARTY + path.sep + 'webrtc_sync', 'w'));
-      return checkout();
-    }
-
-    process.exit(1);
-  });
+      process.exit(1);
+    });
+  } else {
+    build();
+  } 
+ //fs.closeSync(fs.openSync(THIRD_PARTY + path.sep + 'webrtc_sync', 'w'));
+//build();
 }
 
 function configure() {
   if (fs.existsSync(WEBRTC_OUT + path.sep + 'webrtc.node')) {
     fs.unlinkSync(WEBRTC_OUT + path.sep + 'webrtc.node');
   }
-  
+  console.log("CONFIGURE");
   process.env['GYP_DEFINES'] += ' target_arch=' + ARCH;
   process.env['GYP_DEFINES'] += ' host_arch=' + process.arch;
   process.env['GYP_DEFINES'] += ' node_root_dir=' + NODEJS.replace(/\\/g, '\\\\');
@@ -168,40 +162,10 @@ function configure() {
   process.env['GYP_DEFINES'] += ' build_with_chromium=0';
   process.env['GYP_DEFINES'] += ' use_openssl=' + ((USE_OPENSSL) ? '1' : '0');
   process.env['GYP_DEFINES'] += ' use_gtk='+ ((USE_GTK) ? '1' : '0');
-  process.env['GYP_DEFINES'] += ' use_x11=' + ((USE_X11) ? '1' : '0');
-  process.env['GYP_DEFINES'] += ' ConfigurationName=' + CONFIG;
-  process.env['GYP_DEFINES'] += ' enable_tracing=1';
-  process.env['GYP_DEFINES'] += ' include_pulse_audio=0';
-  process.env['GYP_DEFINES'] += ' include_internal_audio_device=1';
-  process.env['GYP_DEFINES'] += ' arm_float_abi=hard';
-  process.env['GYP_DEFINES'] += ' arm_neon=1';
-  process.env['GYP_DEFINES'] += ' werror=';
-  process.env['GYP_CROSSCOMPILE'] = 1;
+  //process.env['GYP_DEFINES'] += ' use_x11=' + ((USE_X11) ? '1' : '0');
+  process.env['GYP_DEFINES'] += ' ConfigurationName=' + CONFIG;  
+  process.env['GYP_DEFINES'] += ' include_tests=0';
   
-  
-  if (process.env['BUILD_WEBRTC_TESTS'] == 'true') {
-    process.env['GYP_DEFINES'] += ' include_tests=1';
-  } else {
-    if (os.platform() == 'win32') {
-      console.log('To enable native WebRTC tests. set BUILD_WEBRTC_TESTS=true and re-run npm install. Tests are located in third_party\\webrtc\\src\\out\\');
-    } else {
-      console.log('To enable native WebRTC tests. export BUILD_WEBRTC_TESTS=true and re-run npm install. Tests are located in third_party/webrtc/src/out/');
-    }
-    
-    process.env['GYP_DEFINES'] += ' include_tests=0';
-  }
-  
-   if (process.env['BUILD_WEBRTC_EXAMPLES'] == 'true') {
-    process.env['GYP_DEFINES'] += ' include_examples=1';
-  } else {
-    if (os.platform() == 'win32') {
-      console.log('To enable native WebRTC tests. set BUILD_WEBRTC_EXAMPLES=true and re-run npm install. Tests are located in third_party\\webrtc\\src\\out\\');
-    } else {
-      console.log('To enable native WebRTC tests. export BUILD_WEBRTC_EXAMPLES=true and re-run npm install. Tests are located in third_party/webrtc/src/out/');
-    }
-    
-    process.env['GYP_DEFINES'] += ' include_examples=0';
-  }
   switch (os.platform()) {
     case 'darwin':
       process.env['GYP_DEFINES'] += ' clang=1';
@@ -209,10 +173,46 @@ function configure() {
       break;
     case 'win32':
       process.env['DEPOT_TOOLS_WIN_TOOLCHAIN'] = 0;
+      process.env['GYP_MSVS_VERSION'] = 2013;
       
       break;
     case 'linux':
-      process.env['GYP_DEFINES'] += ' clang=0';
+      if (CROSSCOMPILE) {
+        process.env['GYP_CROSSCOMPILE'] = 1;
+        process.env['GYP_DEFINES'] += ' clang=0 use_system_expat=0';
+        process.env['CXX'] = 'arm-linux-gnueabihf-g++-5';
+        
+        var CPATH = process.env['CPATH'];
+        
+        process.env['CPATH'] = '/usr/arm-linux-gnueabihf/include/c++/5/';
+        process.env['CPATH'] += '/usr/arm-linux-gnueabihf/include/c++/5/arm-linux-gnueabihf/';
+        process.env['CPATH'] += '/usr/arm-linux-gnueabihf/include/c++/5/backward/';
+        process.env['CPATH'] += CPATH ? ':' + CPATH : '';
+      } else {
+         if (NODE_ZERO) {
+console.log("NODE_ZERO");
+          process.env['GYP_DEFINES'] += ' clang=0';
+          process.env['CXX'] = 'g++-4.8';
+          
+          var CPATH = process.env['CPATH'];
+          
+          process.env['CPATH'] = '/usr/include/c++/4.8/';
+          process.env['CPATH'] += '/usr/include/x86_64-linux-gnu/c++/4.8/';
+          process.env['CPATH'] += '/usr/include/c++/4.8/backward/';
+          process.env['CPATH'] += CPATH ? ':' + CPATH : '';
+        } else {
+console.log("!!!!NODE_ZERO");
+          process.env['GYP_DEFINES'] += ' clang=1';
+        }
+
+        if (!process.env['JAVA_HOME']) {
+          if (fs.existsSync('/usr/lib/jvm/java')) {
+            process.env['JAVA_HOME'] = '/usr/lib/jvm/java';
+          } else {
+            process.env['JAVA_HOME'] = '/usr/lib/jvm/default-java';
+          }
+        } 
+         /*     process.env['GYP_DEFINES'] += ' clang=0';
 
       if (!process.env['JAVA_HOME']) {
         if (fs.existsSync('/usr/lib/jvm/java')) {
@@ -220,6 +220,7 @@ function configure() {
         } else {
           process.env['JAVA_HOME'] = '/usr/lib/jvm/default-java';
         }
+      }*/
       }
 
       break;
@@ -234,13 +235,13 @@ function configure() {
   sync();
 }
 
-function fetch(rerun) {
-  if (!fs.existsSync(WEBRTC) || !fs.existsSync(WEBRTC_SRC)) {
+function config() {
+ /* if (!fs.existsSync(WEBRTC) || !fs.existsSync(path.resolve(WEBRTC, '.gclient')) || !fs.existsSync(WEBRTC_SRC)) {
     if (!fs.existsSync(WEBRTC)) {
       fs.mkdirSync(WEBRTC);
     }
-
-    var res = spawn(FETCH, ['--nohooks', 'webrtc'], {
+    
+    var res = spawn(GCLIENT, ['config', '--name=src', CHROMIUM], {
       cwd: WEBRTC,
       env: process.env,
       stdio: 'inherit',
@@ -251,15 +252,12 @@ function fetch(rerun) {
         return configure();
       }
 
-      if (os.platform() == 'win32' && !rerun) {
-        return fetch(true);
-      }
-
       process.exit(1);
     });
   } else {
     configure();
-  }
+  }*/
+configure();
 }
 
 process.env['GYP_DEFINES'] = process.env['GYP_DEFINES'] ? process.env['GYP_DEFINES'] : '';
@@ -279,11 +277,11 @@ if (!fs.existsSync(DEPOT_TOOLS)) {
 
   res.on('close', function (code) {
     if (!code) {
-      return fetch(false);
+      return config();
     }
 
     process.exit(1);
   });
 } else {
-  fetch(false);
+  config();
 }
