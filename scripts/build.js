@@ -110,7 +110,7 @@ console.log("build",WEBRTC_SRC);
 //var res = spawn('python', [ WEBRTC_SRC + path.sep + 'webrtc' + path.sep + 'build' + path.sep + 'gyp_webrtc', 'src' + path.sep + 'webrtc.gyp'
 // gn gen out/Release
 // gn gen out/Release --args="use_ozone=true rtc_include_pulse_audio=false "
-process.env.CHROMIUM_BUILDTOOLS_PATH = '/home/comcastuser/san/new/webrtc-native/third_party/webrtc/src/buildtools';
+process.env.CHROMIUM_BUILDTOOLS_PATH = WEBRTC_SRC + '/buildtools';
 
     var res = spawn("gn", ['gen', 'out/Release',' --args=use_ozone=true rtc_include_pulse_audio=false '], {
      cwd: WEBRTC_SRC,
