@@ -38,7 +38,7 @@ webrtc-native is using webrtc from chromium project. code is compiled with branc
 # Build from source
 
 ````
-git clone https://github.com/iris-platform/webrtc-streaming-node
+git clone -b webrtc60 https://github.com/iris-platform/webrtc-streaming-node
 cd webrtc-streaming-node
 export BUILD_WEBRTC=true
 npm install
