@@ -71,7 +71,9 @@ void Platform::Dispose() {
   
   g_worker_thread->SetAllowBlockingCalls(true);
     g_worker_thread->Stop();
-  
+  worker_thread->SetAllowBlockingCalls(true);
+  worker_thread->Stop();
+ 
 
   if (rtc::ThreadManager::Instance()->CurrentThread() == g_signaling_thread) {
     rtc::ThreadManager::Instance()->SetCurrentThread(NULL);

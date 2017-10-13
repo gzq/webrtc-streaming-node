@@ -78,7 +78,7 @@ rtc::scoped_refptr<webrtc::MediaStreamInterface> stream;
 //rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
 //rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
   rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory  = webrtc::CreatePeerConnectionFactory(
-        rtc::Thread::Current(), rtc::Thread::Current(), Platform::GGetWorker(),
+        rtc::Thread::Current(), rtc::Thread::Current(), Platform::GetWorkerSec(),
         nullptr, nullptr, nullptr);
 
 
