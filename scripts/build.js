@@ -112,7 +112,7 @@ console.log("build",WEBRTC_SRC);
 // gn gen out/Release --args="use_ozone=true rtc_include_pulse_audio=false "
 process.env.CHROMIUM_BUILDTOOLS_PATH = WEBRTC_SRC + '/buildtools';
 
-    var res = spawn("gn", ['gen', 'out/Release',' --args=use_ozone=true rtc_include_pulse_audio=false '], {
+    var res = spawn("gn", ['gen', 'out/Release',' --args=use_ozone=true rtc_include_pulse_audio=false is_debug=false dcheck_always_on=true rtc_include_tests=false  symbol_level=0 enable_nacl=false'], {
      cwd: WEBRTC_SRC,
      env: process.env,
      stdio: 'inherit',

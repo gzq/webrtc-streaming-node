@@ -35,7 +35,8 @@ namespace WebRTC {
 	    static void Init();
 	    static void Dispose();
       static rtc::Thread *GetWorker();
-static rtc::Thread *GetSignal();
+      static rtc::Thread *GetSignal();
+      static rtc::Thread *GetWorkerSec();
   };
 };
 

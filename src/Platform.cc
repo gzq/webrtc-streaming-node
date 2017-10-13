@@ -37,7 +37,7 @@ using namespace WebRTC;
 using namespace std;
 uint32_t worker_count = 8, counter = 0;
 //rtc::Thread *signal_thread;
-//rtc::Thread *worker_thread;
+rtc::Thread *worker_thread;
 rtc::Thread *g_worker_thread;
 rtc::Thread *g_signaling_thread;
 void Platform::Init() {
@@ -46,68 +46,49 @@ void Platform::Init() {
 #if defined(WEBRTC_WIN)
   rtc::EnsureWinsockInit();
 #endif
- // rtc::InitializeSSL();
+  rtc::InitializeSSL();
   
-//g_worker_thread = rtc::Thread::Create().release();
-  //  g_worker_thread->Start();
-g_worker_thread = new rtc::Thread();
-    g_worker_thread->Start();
-   g_signaling_thread = new rtc::Thread();
-    g_signaling_thread->Start();
+  g_worker_thread = new rtc::Thread();
+  g_worker_thread->Start();
+  g_signaling_thread = new rtc::Thread();
+  g_signaling_thread->Start();
+  
+  rtc::ThreadManager::Instance()->SetCurrentThread(g_signaling_thread); 
+  g_signaling_thread->SetAllowBlockingCalls(true);
+
+  worker_thread = new rtc::Thread();
+  worker_thread->Start();
 
    
-   /*signal_thread = rtc::Thread::Create().release();
-
-  rtc::ThreadManager::Instance()->SetCurrentThread(signal_thread); // sanbc : Moved to solve IsCurrent()
-  
-  signal_thread->SetAllowBlockingCalls(true);
-  signal_thread->Start();
-  
- // rtc::ThreadManager::Instance()->SetCurrentThread(signal_thread);
-  
-  if (rtc::ThreadManager::Instance()->CurrentThread() != signal_thread) {
-    Nan::ThrowError("Internal Thread Error!");
-  }
- 
-#ifdef WEBRTC_THREAD_COUNT
-  worker_count = WEBRTC_THREAD_COUNT;
-#else
-  worker_count = webrtc::CpuInfo::DetectNumberOfCores();
-#endif
-
- //worker_thread = new rtc::Thread[worker_count];
-  //for (uint32_t index = 0; index < worker_count; index++) {
-worker_thread = rtc::Thread::Create().release();
-    worker_thread->Start();*/
-  //}
+   
 }
 
 void Platform::Dispose() {
   LOG(LS_INFO) << __PRETTY_FUNCTION__;
   
- /* signal_thread->SetAllowBlockingCalls(true);
-  signal_thread->Stop();
+  g_signaling_thread->SetAllowBlockingCalls(true);
+  g_signaling_thread->Stop();
   
-  for (uint32_t index = 0; index < worker_count; index++) {
-    worker_thread[index].SetAllowBlockingCalls(true);
-    worker_thread[index].Stop();
-  }
+  g_worker_thread->SetAllowBlockingCalls(true);
+    g_worker_thread->Stop();
+  
 
-  if (rtc::ThreadManager::Instance()->CurrentThread() == signal_thread) {
+  if (rtc::ThreadManager::Instance()->CurrentThread() == g_signaling_thread) {
     rtc::ThreadManager::Instance()->SetCurrentThread(NULL);
   }
   
-  delete [] worker_thread;
-  delete signal_thread;
-  
-  rtc::CleanupSSL();*/
+  delete g_worker_thread;
+  delete g_signaling_thread;
+   delete worker_thread;
+  rtc::CleanupSSL();
 }
 
 rtc::Thread *Platform::GetWorker() {
-//  return &worker_thread[(counter++) % worker_count];
-return g_worker_thread;
+  return g_worker_thread;
 }
 rtc::Thread  *Platform::GetSignal() {
-//  return &worker_thread[(counter++) % worker_count];
-return g_signaling_thread;
+  return g_signaling_thread;
+}
+rtc::Thread *Platform::GetWorkerSec() {
+  return worker_thread;
 }

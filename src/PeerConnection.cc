@@ -151,9 +151,8 @@ PeerConnection::PeerConnection(const Configuration config) : _config(config) {
   _local = new rtc::RefCountedObject<LocalDescriptionObserver>(this);
   _remote = new rtc::RefCountedObject<RemoteDescriptionObserver>(this);
   _peer = new rtc::RefCountedObject<PeerConnectionObserver>(this); 
-  LOG(LS_INFO) <<  "BEFORE PEERCONNECTION FACTORY CREATED";
-  _factory  = webrtc::CreatePeerConnectionFactory(
-        Platform::GetWorker(), Platform::GetWorker(), Platform::GetSignal(),
+   _factory  = webrtc::CreatePeerConnectionFactory(
+        rtc::Thread::Current(), rtc::Thread::Current(), Platform::GetWorker(),
         nullptr, nullptr, nullptr);
 
 
@@ -218,9 +217,9 @@ void PeerConnection::New(const Nan::FunctionCallbackInfo<Value> &info) {
 
 
   if (info.IsConstructCall()) {
-Configuration config;
+  Configuration config;
  Local<Object> _config = Local<Object>::Cast(info[0]);
-Local<Value> iceservers_value = _config->Get(Nan::New("iceServers").ToLocalChecked());
+ Local<Value> iceservers_value = _config->Get(Nan::New("iceServers").ToLocalChecked());
     if (!iceservers_value.IsEmpty() && iceservers_value->IsArray()) {
       Local<Array> list = Local<Array>::Cast(iceservers_value);
 
@@ -256,7 +255,6 @@ Local<Value> iceservers_value = _config->Get(Nan::New("iceServers").ToLocalCheck
 }
     PeerConnection* peer = new PeerConnection(config);
     peer->Wrap(info.This(), "PeerConnection");
- LOG(LS_INFO) << "peerconnection connected";
     return info.GetReturnValue().Set(info.This());
   } else {
     const int argc = 2;

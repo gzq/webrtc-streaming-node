@@ -27,7 +27,7 @@
       'includes': [
     './third_party/webrtc/src/build/common.gypi',
     './build/config.gypi',
-    #'./nodejs.gypi',
+    './nodejs.gypi',
     './src/addon.gypi',
   ],
       'sources': [
@@ -48,7 +48,7 @@
       ],
 
       'cflags': [
-        '-pthread',
+       # '-pthread',
         '-march=x86-64',
         '-fno-exceptions',
         '-fno-strict-aliasing',
@@ -67,11 +67,11 @@
         '-fPIC',
         '-fpermissive',
         '-std=gnu++11',
-        '-D_GLIBCXX_USE_CXX11_ABI=0',
-        '-D_GLIBCXX_DEBUG=1',
-        '-D_LARGEFILE_SOURCE',
-        '-D_LARGEFILE64_SOURCE',
-        '-D_DEBUG -DDYNAMIC_ANNOTATIONS_ENABLED -DWTF_USE_DYNAMIC_ANNOTATIONS=1',
+        #'-D_GLIBCXX_USE_CXX11_ABI=0',
+        #'-D_GLIBCXX_DEBUG=1',
+       # '-D_LARGEFILE_SOURCE',
+       # '-D_LARGEFILE64_SOURCE',
+        #'-D_DEBUG -DDYNAMIC_ANNOTATIONS_ENABLED -DWTF_USE_DYNAMIC_ANNOTATIONS=1',
       ],
       'xcode_settings': {
         'MACOSX_DEPLOYMENT_TARGET': '10.7',
@@ -89,7 +89,7 @@
 #        'TRACING',
 #        'LARGEFILE_SOURCE',
 #        '_FILE_OFFSET_BITS=64',
-        'WEBRTC_THREAD_RR',
+ #       'WEBRTC_THREAD_RR',
         'EXPAT_RELATIVE_PATH',
         'GTEST_RELATIVE_PATH',
         'JSONCPP_RELATIVE_PATH',
@@ -164,4 +164,3 @@
 
   ]
 }
-

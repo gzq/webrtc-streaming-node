@@ -77,8 +77,8 @@ void GetUserMedia::GetMediaStream(const Nan::FunctionCallbackInfo<Value> &info) 
 rtc::scoped_refptr<webrtc::MediaStreamInterface> stream;
 //rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track;
 //rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track;
-  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> _factory  = webrtc::CreatePeerConnectionFactory(
-        Platform::GetWorker(), Platform::GetWorker(), Platform::GetSignal(),
+  rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> factory  = webrtc::CreatePeerConnectionFactory(
+        rtc::Thread::Current(), rtc::Thread::Current(), Platform::GGetWorker(),
         nullptr, nullptr, nullptr);
 
 
@@ -91,37 +91,19 @@ rtc::scoped_refptr<webrtc::MediaStreamInterface> stream;
 
   if (constraints->UseAudio() || constraints->UseVideo()) {
    
-    if (_factory.get()) {
+    if (factory.get()) {
 
-
-
-
- 
-LOG(LS_INFO) << "video_track";
-stream =
-      _factory->CreateLocalMediaStream(kStreamLabel);
-
-  //stream->AddTrack(audio_track);
-  //stream->AddTrack(video_track);
-  
-  
-
-
-
-
-
-
+      stream =
+        factory->CreateLocalMediaStream(kStreamLabel);
 
       if (stream.get()) {
         if (constraints->UseAudio()) {
           
-
-LOG(LS_INFO) << "audio_track";
   //        if (audioId.empty()) {
 
 
-              rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(_factory->CreateAudioTrack(
-          kAudioLabel, _factory->CreateAudioSource(NULL)));
+              rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(factory->CreateAudioTrack(
+          kAudioLabel, factory->CreateAudioSource(NULL)));
         /*  } else {
               rtc::scoped_refptr<webrtc::AudioTrackInterface> audio_track(_factory->CreateAudioTrack(
           audioId, _factory->CreateAudioSource(NULL)));
@@ -146,9 +128,9 @@ LOG(LS_INFO) << "audio_track";
           
 
    //       if (videoId.empty()) {
-             rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(_factory->CreateVideoTrack(
+             rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(factory->CreateVideoTrack(
           kVideoLabel,
-          _factory->CreateVideoSource(OpenVideoCaptureDevice(),
+          factory->CreateVideoSource(OpenVideoCaptureDevice(),
                                                       NULL)));
      /*     } else {
   rtc::scoped_refptr<webrtc::VideoTrackInterface> video_track(_factory->CreateVideoTrack(
