@@ -17,7 +17,7 @@
   "main": "index.js",
   "scripts": {
  "install": "node scripts/install.js",
-"install": "node-gyp configure build openssl_fps=X"
+"install": "node-gyp configure build --openssl_fips=X"
   },
   "dependencies": {
     "request": "^2.58.0"
