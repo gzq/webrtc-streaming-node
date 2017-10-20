@@ -101,7 +101,22 @@ function compile() {
         //   process.exit(1);
     });
 }
+function preBuild() {
+   var res = spawn("build/linux/sysroot_scripts/install-sysroot.py ", ['--arch=arm'], {
+        cwd: WEBRTC_SRC,
+        env: process.env,
+        stdio: 'inherit',
+    });
 
+    res.on('close', function(code) {
+
+        if (!code) {
+            return build();
+        }
+
+        process.exit(1);
+    });
+}
 function build() {
 
     //var res = spawn('python', [ WEBRTC_SRC + path.sep + 'webrtc' + path.sep + 'build' + path.sep + 'gyp_webrtc', 'src' + path.sep + 'webrtc.gyp'
@@ -188,6 +203,7 @@ function configure() {
                 process.env['CPATH'] += '/usr/arm-linux-gnueabihf/include/c++/5/backward/';
                 process.env['CPATH'] += CPATH ? ':' + CPATH : '';
                 gen_args = 'target_cpu=\"arm\"';
+                preBuild();
             } else {
                 if (NODE_ZERO) {
                     process.env['GYP_DEFINES'] += ' clang=0';
