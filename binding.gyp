@@ -27,7 +27,7 @@
       'includes': [
     './third_party/webrtc/src/build/common.gypi',
     './build/config.gypi',
-    './nodejs.gypi',
+#    './nodejs.gypi',
     './src/addon.gypi',
   ],
       'sources': [

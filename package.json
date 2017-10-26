@@ -16,11 +16,10 @@
 
   "main": "index.js",
   "scripts": {
- "install": "node scripts/install.js",
-"install": "node-gyp configure build --openssl_fips=X"
+ "install": "node scripts/install.js"
   },
   "dependencies": {
-    "request": "^2.58.0"
+    "request": "~2.58.0"
   },
   "devDependencies": {
     "nan": "^2.1.0",
