@@ -67,7 +67,7 @@ def run_build(tempdir, options):
   else:
     build_rel = os.path.join('out', 'Release')
   build_root = os.path.join(SRC_ROOT, build_rel)
-
+  
   print 'Building gn manually in a temporary directory for bootstrapping...'
   build_gn_with_ninja_manually(tempdir, options)
   temp_gn = os.path.join(tempdir, 'gn')
@@ -503,6 +503,7 @@ def write_gn_ninja(path, root_gen_dir, options):
       'base/task_scheduler/task_scheduler_impl.cc',
       'base/task_scheduler/task_tracker.cc',
       'base/task_scheduler/task_traits.cc',
+      'base/task_scheduler/environment_config.cc',#added by sanbc
       'base/third_party/dmg_fp/dtoa_wrapper.cc',
       'base/third_party/dmg_fp/g_fmt.cc',
       'base/third_party/icu/icu_utf.cc',
@@ -602,8 +603,8 @@ def write_gn_ninja(path, root_gen_dir, options):
         'base/threading/thread_local_storage_posix.cc',
         'base/threading/worker_pool_posix.cc',
         'base/time/time_conversion_posix.cc',
-        'base/time/time_exploded_posix.cc',
-        'base/time/time_now_posix.cc',
+     #   'base/time/time_exploded_posix.cc',
+     #   'base/time/time_now_posix.cc',
         'base/trace_event/heap_profiler_allocation_register_posix.cc',
     ])
     static_libraries['libevent'] = {
@@ -626,7 +627,12 @@ def write_gn_ninja(path, root_gen_dir, options):
         'include_dirs': [],
         'cflags': cflags + ['-DHAVE_CONFIG_H'],
     }
-
+  logging.error('ectory for bootstrapping...%s', cflags);
+  if is_posix and not is_mac:
+    static_libraries['base']['sources'].extend([
+        'base/time/time_now_posix.cc',
+        'base/time/time_exploded_posix.cc'
+    ])
   if is_linux or is_aix:
     ldflags.extend(['-pthread'])
 

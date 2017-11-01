@@ -25,7 +25,7 @@
         'action_before_build',
       ],
       'includes': [
-    './third_party/webrtc/src/build/common.gypi',
+#    './third_party/webrtc/src/build/common.gypi',
     './build/config.gypi',
 #    './nodejs.gypi',
     './src/addon.gypi',
@@ -49,7 +49,7 @@
 
       'cflags': [
        # '-pthread',
-        '-march=x86-64',
+     #   '-march=x64',
         '-fno-exceptions',
         '-fno-strict-aliasing',
         '-Wall',
@@ -92,7 +92,7 @@
  #       'WEBRTC_THREAD_RR',
         'EXPAT_RELATIVE_PATH',
         'GTEST_RELATIVE_PATH',
-        'JSONCPP_RELATIVE_PATH',
+    #    'JSONCPP_RELATIVE_PATH',
 
         'rtc_base_config',
         'WEBRTC_RELATIVE_PATH',
@@ -134,7 +134,7 @@
         'conditions': [
           ['OS=="mac"', {
             'libraries': [
-              '-framework AppKit',
+              '-framework AppKit -framework AVFoundation -framework CoreMedia',
             ],
           }],
           ['OS=="win"', {
