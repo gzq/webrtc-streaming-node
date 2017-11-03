@@ -103,10 +103,6 @@
         });
     }
 
-    function preBuild() {
-
-    }
-
     function build() {
 
         //var res = spawn('python', [ WEBRTC_SRC + path.sep + 'webrtc' + path.sep + 'build' + path.sep + 'gyp_webrtc', 'src' + path.sep + 'webrtc.gyp'
@@ -175,7 +171,6 @@
                 process.env['GYP_DEFINES'] += ' clang=1';
                 var BUILD_REVISION = WEBRTC_SRC + '/third_party/llvm-build/cr_build_revision';
                 var CLANG_UPDATE = WEBRTC_SRC + '/tools/clang/scripts/update.py';
-                console.log("BUILD_REVISION", BUILD_REVISION)
                 if (fs.existsSync(BUILD_REVISION)) {
 
                     var child = spawn("python", ['./tools/gn/bootstrap/bootstrap.py', '-s'], {
@@ -207,7 +202,6 @@
                             });
 
                         } else {
-                            console.log("hello")
                             process.exit(1);
                         }
 
