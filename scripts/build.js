@@ -229,7 +229,8 @@
                     process.env['CPATH'] += '/usr/arm-linux-gnueabihf/include/c++/5/backward/';
                     process.env['CPATH'] += CPATH ? ':' + CPATH : '';
                     gen_args = 'target_cpu=\"arm\"';
-                    var res = spawn("build/linux/sysroot_scripts/install-sysroot.py ", ['--arch=arm'], {
+
+		    var res = spawn(WEBRTC_SRC + "/build/linux/sysroot_scripts/install-sysroot.py", ['--arch=arm'], {
                         cwd: WEBRTC_SRC,
                         env: process.env,
                         stdio: 'inherit',
