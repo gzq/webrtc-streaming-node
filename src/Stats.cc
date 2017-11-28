@@ -62,7 +62,7 @@ Local<Value> RTCStatsReport::New(webrtc::StatsReport *report) {
   Local<Object> ret = instance->NewInstance();
   RTCStatsReport *stats = RTCWrap::Unwrap<RTCStatsReport>(ret, "RTCStatsReport");
 
-  if (stats) {
+  if (stats) {     
     stats->_report = report;
   }
 
@@ -82,58 +82,56 @@ void RTCStatsReport::New(const Nan::FunctionCallbackInfo<Value> &info) {
 
 void RTCStatsReport::Names(const Nan::FunctionCallbackInfo<Value> &info) { 
   RTCStatsReport *stats = RTCWrap::Unwrap<RTCStatsReport>(info.This(), "RTCStatsReport");
-  webrtc::StatsReport::Values values = stats->_report->values();
+  const webrtc::StatsReport::Values& values = stats->_report->values();
   Local<Array> list = Nan::New<Array>();
   unsigned int index = 0;
-  
-  for (webrtc::StatsReport::Values::iterator it = values.begin(); it != values.end(); it++) {
-    webrtc::StatsReport::ValuePtr value = values[it->first];
-    list->Set(index, Nan::New(value->display_name()).ToLocalChecked());
+  for (const auto& it : values) {
+    std::string value(it.second->ToString());
+    list->Set(index, Nan::New(it.second->display_name()).ToLocalChecked());
     index++;
   }
-  
   return info.GetReturnValue().Set(list);
-}
+ }
 
 void RTCStatsReport::Stat(const Nan::FunctionCallbackInfo<Value> &info) {
   RTCStatsReport *stats = RTCWrap::Unwrap<RTCStatsReport>(info.This(), "RTCStatsReport");
-  webrtc::StatsReport::Values values = stats->_report->values();
+  const webrtc::StatsReport::Values& values = stats->_report->values();
 
   if (info.Length() >= 1 && info[0]->IsString()) {
     String::Utf8Value entry_value(info[0]->ToString());
     std::string entry(*entry_value);
     
-    for (webrtc::StatsReport::Values::iterator it = values.begin(); it != values.end(); it++) {
-      webrtc::StatsReport::ValuePtr value = values[it->first];
+    for (const auto& it : values) {
+      std::string value(it.second->ToString());
 
-      if (!entry.compare(value->display_name())) {
-        switch (value->type()) {
+      if (!entry.compare(it.second->display_name())) {
+        switch (it.second->type()) {
           case webrtc::StatsReport::Value::kInt:
-            return info.GetReturnValue().Set(Nan::New(value->int_val()));
+            return info.GetReturnValue().Set(Nan::New(it.second->int_val()));
             
             break;
           case webrtc::StatsReport::Value::kInt64:
-            return info.GetReturnValue().Set(Nan::New(static_cast<int32_t>(value->int64_val())));
+            return info.GetReturnValue().Set(Nan::New(static_cast<int32_t>(it.second->int64_val())));
             
             break;
           case webrtc::StatsReport::Value::kFloat:
-            return info.GetReturnValue().Set(Nan::New(value->float_val()));
+            return info.GetReturnValue().Set(Nan::New(it.second->float_val()));
           
             break;
           case webrtc::StatsReport::Value::kString:
-            return info.GetReturnValue().Set(Nan::New(value->string_val().c_str()).ToLocalChecked());
+            return info.GetReturnValue().Set(Nan::New(it.second->string_val().c_str()).ToLocalChecked());
             
             break;
           case webrtc::StatsReport::Value::kStaticString:
-            return info.GetReturnValue().Set(Nan::New(value->static_string_val()).ToLocalChecked());
+            return info.GetReturnValue().Set(Nan::New(it.second->static_string_val()).ToLocalChecked());
             
             break;
           case webrtc::StatsReport::Value::kBool:
-            return info.GetReturnValue().Set(Nan::New(value->bool_val()));
+            return info.GetReturnValue().Set(Nan::New(it.second->bool_val()));
             
             break;
           case webrtc::StatsReport::Value::kId:
-            return info.GetReturnValue().Set(Nan::New(value->ToString().c_str()).ToLocalChecked());
+            return info.GetReturnValue().Set(Nan::New(it.second->ToString().c_str()).ToLocalChecked());
           
             break;
         }

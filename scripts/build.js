@@ -194,23 +194,17 @@
                                     } else {
                                         build();
                                     }
-
                                 })
-
-
-
                             });
-
                         } else {
                             process.exit(1);
                         }
-
                     });
                     break;
-
                 } else {
                     build();
                 }
+
             case 'win32':
                 process.env['DEPOT_TOOLS_WIN_TOOLCHAIN'] = 0;
                 process.env['GYP_MSVS_VERSION'] = 2013;
