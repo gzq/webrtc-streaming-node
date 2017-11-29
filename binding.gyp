@@ -25,6 +25,7 @@
         'action_before_build',
       ],
       'includes': [
+        'variables.gypi',
 #    './third_party/webrtc/src/build/common.gypi',
     './build/config.gypi',
 #    './nodejs.gypi',
@@ -150,7 +151,7 @@
           }, {
             'libraries': [
              # '../third_party/webrtc/lib/libwebrtc.a',
-            '../third_party/webrtc/src/out/Release/obj/webrtc/libwebrtc.a',
+          #  '../third_party/webrtc/src/out/Release/obj/webrtc/libwebrtc.a',
              # '../third_party/webrtc/src/out/Release/obj/webrtc/pc/librtc_pc.a',
               #'../third_party/webrtc/src/build/linux/debian_jessie_i386-sysroot/usr/lib/libjsoncpp.a',
             ],
