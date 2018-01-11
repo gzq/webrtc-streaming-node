@@ -11,8 +11,11 @@
           'action_name': 'run_build_script',
           'inputs': [],
           'outputs': [''],
+'includes': [
+        'variables.gypi'],
+
           'action': [
-            'node', 'scripts/build.js', '-Dtarget-arch=<(target_arch)', '<(node_root_dir)', '<(node_lib_file)', '<(node_gyp_dir)'
+            'node', 'scripts/build.js', '-Dtarget-arch=<(target_arch)', '<(node_root_dir)', '<(node_lib_file)', '<(node_gyp_dir)', '<(lib_webrtc)'
           ],
         }
       ]
@@ -165,3 +168,4 @@
 
   ]
 }
+

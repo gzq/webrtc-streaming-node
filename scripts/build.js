@@ -27,6 +27,7 @@
     var NODEVER = process.version.split('.');
     var NODE_ZERO = (NODEVER[0] === 'v0');
     var CROSSCOMPILE = (ARCH !== process.arch);
+    var webrtc_lib = process.argv[6];
     NODEVER[2] = 'x';
     NODEVER = NODEVER.join('.');
     gen_args = '';
@@ -211,7 +212,10 @@
                 build();
                 break;
             case 'linux':
-                if (CROSSCOMPILE) {
+                if (webrtc_lib !== '../third_party/webrtc/src/out/Release/obj/webrtc/libwebrtc.a') {
+                    break;
+                }
+                else if (CROSSCOMPILE) {
                     process.env['GYP_CROSSCOMPILE'] = 1;
                     process.env['GYP_DEFINES'] += ' clang=0 use_system_expat=0';
                     process.env['CXX'] = 'arm-linux-gnueabihf-g++-5';
@@ -327,3 +331,4 @@
     } else {
         config();
     }
+
