@@ -43,7 +43,14 @@ cd webrtc-streaming-node
 export BUILD_WEBRTC=true
 npm install
 ````
+* To pass static library:
+````
+  npm install --lib_webrtc=<path_to_library_from_build_folder>
 
+  example:
+
+    npm install --lib_webrtc=../libwebrtc.a
+````
 # Prerequisite software
 
 
